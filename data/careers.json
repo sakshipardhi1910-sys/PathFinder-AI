@@ -1,0 +1,5 @@
+{
+  "science": ["Engineer", "Doctor", "Pharmacy"],
+  "commerce": ["CA", "BBA", "Banking"],
+  "arts": ["UPSC", "Teaching", "Design"]
+}
