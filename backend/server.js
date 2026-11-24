@@ -15,6 +15,10 @@ const rootDir = path.join(__dirname, "..");
 const frontendDir = path.join(rootDir, "frontend");
 const dataDir = path.join(rootDir, "data");
 const feedbackFile = path.join(dataDir, "feedback.json");
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 function ensureFeedbackFile() {
   if (!fs.existsSync(dataDir)) {
@@ -30,8 +34,9 @@ ensureFeedbackFile();
 
 app.use(cors({
   origin(origin, callback) {
-    // Supports the bundled frontend and common local development servers.
-    if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
+    // Supports the bundled frontend, common local dev servers, and any
+    // explicitly configured deployment origins.
+    if (!origin || configuredOrigins.includes(origin) || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
     return callback(new Error("This origin is not allowed by PathFinder AI CORS policy."));
   }
 }));

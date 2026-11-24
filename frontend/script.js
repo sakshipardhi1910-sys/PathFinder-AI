@@ -1,4 +1,7 @@
-const API_BASE_URL = location.port === "5000" ? location.origin : "http://127.0.0.1:5000";
+// The Express server serves both the frontend and API on port 5000. When the
+// frontend is served separately (for example by VS Code Live Server), use the
+// local API by default. Deployments can set this before script.js is loaded.
+const API_BASE_URL = (window.PATHFINDER_API_BASE_URL || (location.port === "5000" ? location.origin : "http://localhost:5000")).replace(/\/$/, "");
 const charts = {}; let report;
 const chartColors = ["#8b5cf6", "#38bdf8", "#d946ef", "#34d399", "#f59e0b"];
 const $ = id => document.getElementById(id);
@@ -8,7 +11,7 @@ const load = () => { try { return JSON.parse(localStorage.getItem("pathfinderRep
 const set = (id, value) => { const element = $(id); if (element) element.textContent = value; };
 const escapeHTML = value => String(value).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function busy(button, state, label) { if (!button) return; button.disabled = state; button.dataset.label ||= button.textContent; button.textContent = state ? label : button.dataset.label; }
-async function post(endpoint, payload) { const response = await fetch(`${API_BASE_URL}${endpoint}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.message || "We could not complete that request."); return data; }
+async function post(endpoint, payload) { let response; try { response = await fetch(`${API_BASE_URL}${endpoint}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); } catch { throw new Error(`Cannot reach the PathFinder AI backend at ${API_BASE_URL}. Start it with “npm start” and try again.`); } const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.message || `The PathFinder AI API returned HTTP ${response.status}.`); return data; }
 
 function setupIndex() { const form = $("futureForm"); if (!form) return; form.addEventListener("submit", async event => { event.preventDefault(); const name = $("name").value.trim(), interest = $("interest").value, marks = $("marks").value, budget = $("budget").value, interests = $("studentInterests").value.trim(), message = $("formMessage"), button = $("submitAnalysis"); if (!name || !interest || marks === "" || budget === "") return void (message.textContent = "Please complete your name, stream, marks and budget."); if (+marks < 0 || +marks > 100 || +budget < 0) return void (message.textContent = "Marks must be between 0 and 100, and budget cannot be negative."); message.textContent = ""; busy(button, true, "Building your analytics…"); try { const career = await post("/career", { interest, marks, interests, budget }); const finance = await post("/finance", { budget, course: career.careerSuggestions[0], interest }); save({ name, interest, interests, marks: +marks, budget: +budget, career, finance, createdAt: new Date().toISOString() }); location.href = "dashboard.html"; } catch (error) { message.textContent = error.message; busy(button, false); } }); }
 function makeChart(id, config) { if (!window.Chart || !$(id)) return; if (charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), config); }
