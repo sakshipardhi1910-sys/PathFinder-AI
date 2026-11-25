@@ -105,8 +105,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`PathFinder AI server running at http://localhost:${PORT}`);
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`PathFinder AI server listening on port ${PORT}`);
 });
 
 server.on("error", (error) => {

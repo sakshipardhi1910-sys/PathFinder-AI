@@ -1,7 +1,7 @@
 // The Express server serves both the frontend and API on port 5000. When the
 // frontend is served separately (for example by VS Code Live Server), use the
 // local API by default. Deployments can set this before script.js is loaded.
-const API_BASE_URL = (window.PATHFINDER_API_BASE_URL || (location.port === "5000" ? location.origin : "http://localhost:5000")).replace(/\/$/, "");
+const API_BASE_URL = (window.PATHFINDER_API_BASE_URL || ((location.hostname === "localhost" || location.hostname === "127.0.0.1") ? "http://localhost:5000" : "")).replace(/\/$/, "");
 const charts = {}; let report;
 const chartColors = ["#8b5cf6", "#38bdf8", "#d946ef", "#34d399", "#f59e0b"];
 const $ = id => document.getElementById(id);
